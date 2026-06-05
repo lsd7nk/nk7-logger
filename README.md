@@ -31,7 +31,7 @@ Lightweight logging service for Unity built on `Microsoft.Extensions.Logging`, Z
 ### Unity Package Manager
 1. Open Unity Package Manager (`Window -> Package Manager`).
 2. Click `+ -> Add package from git URL...`.
-3. Enter `https://github.com/s-elovikov/nk7-logger.git?path=src`.
+3. Enter `https://github.com/lsd7nk/nk7-logger.git?path=src`.
 
 Unity does not auto-update Git-based packages; update the hash manually when needed or use [UPM Git Extension](https://github.com/mob-sakai/UpmGitExtension).
 
