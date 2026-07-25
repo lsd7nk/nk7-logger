@@ -1,6 +1,6 @@
 {
   "name": "com.nk7.logger",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "license": "MIT",
   "dependencies": {
     "org.nuget.zlogger": "2.5.10",
