@@ -1,5 +1,5 @@
-using Cysharp.Text;
 using UnityEngine;
+using System.Text;
 using System.IO;
 using System;
 
@@ -17,15 +17,6 @@ namespace Nk7.Logger
 
         public override long Position { get; set; }
 
-        private Utf16ValueStringBuilder _buffer;
-        private readonly byte _endOfString;
-
-        public UnityDebugStream()
-        {
-            _buffer = ZString.CreateStringBuilder();
-            _endOfString = (byte)'\n';
-        }
-
         public override int Read(byte[] buffer, int offset, int count)
         {
             throw new NotSupportedException();
@@ -41,76 +32,53 @@ namespace Nk7.Logger
             throw new NotSupportedException();
         }
 
-        public override void Flush()
+        public override void Flush() { }
+
+        public override void Write(byte[] buffer, int offset, int count)
         {
-            if (_buffer.Length == 0)
+            if (count <= 0)
             {
                 return;
             }
 
-            ReadOnlySpan<char> span = _buffer.AsSpan();
-            char prefix = span[0];
+            char prefix = (char)buffer[0];
+            int messageOffset = offset + 1;
+            int messageLength = count - 1;
 
-            ReadOnlySpan<char> messageSpan = span.Slice(1);
-            int end = messageSpan.Length;
-
-            while (end > 0 && char.IsWhiteSpace(messageSpan[end - 1]))
+            while (messageLength > 0)
             {
-                end--;
-            }
+                byte last = buffer[messageOffset + messageLength - 1];
 
-            if (end > 0)
-            {
-                string message = messageSpan.Slice(0, end).ToString();
-
-                switch (prefix)
+                if (last != (byte)'\n' && last != (byte)'\r')
                 {
-                    case UnityDebugFormatter.INFORMATION_PREFIX:
-                    case UnityDebugFormatter.DEBUG_PREFIX:
-                    case UnityDebugFormatter.TRACE_PREFIX:
-                        Debug.Log(message);
-                        break;
-
-                    case UnityDebugFormatter.CRITICAL_PREFIX:
-                    case UnityDebugFormatter.ERROR_PREFIX:
-                        Debug.LogError(message);
-                        break;
-
-                    case UnityDebugFormatter.WARNING_PREFIX:
-                        Debug.LogWarning(message);
-                        break;
+                    break;
                 }
+                    
+                --messageLength;
             }
 
-            _buffer.Clear();
-        }
-
-        public override void Write(byte[] buffer, int offset, int count)
-        {
-            for (int i = 0; i < count; ++i)
+            if (messageLength <= 0)
             {
-                byte b = buffer[offset + i];
-
-                if (b == _endOfString)
-                {
-                    Flush();
-                }
-                else
-                {
-                    _buffer.Append((char)b);
-                }
+                return;
             }
-        }
 
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
+            string message = Encoding.UTF8.GetString(buffer, messageOffset, messageLength);
+
+            switch (prefix)
             {
-                Flush();
-                _buffer.Dispose();
+                case UnityDebugFormatter.INFORMATION_PREFIX:
+                case UnityDebugFormatter.DEBUG_PREFIX:
+                case UnityDebugFormatter.TRACE_PREFIX:
+                    Debug.Log(message);
+                    break;
+                case UnityDebugFormatter.CRITICAL_PREFIX:
+                case UnityDebugFormatter.ERROR_PREFIX:
+                    Debug.LogError(message);
+                    break;
+                case UnityDebugFormatter.WARNING_PREFIX:
+                    Debug.LogWarning(message);
+                    break;
             }
-
-            base.Dispose(disposing);
         }
     }
 }
