@@ -38,6 +38,11 @@ namespace Nk7.Logger
                         Directory.CreateDirectory(directoryName);
                     }
 
+                    if (File.Exists(loggerFilePath))
+                    {
+                        File.Delete(loggerFilePath);
+                    }
+
                     builder.AddZLoggerFile(loggerFilePath, SetZLoggerFileOptions);
                 }
             });
