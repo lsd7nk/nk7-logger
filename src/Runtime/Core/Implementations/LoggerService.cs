@@ -205,7 +205,7 @@ namespace Nk7.Logger
                 return;
             }
 
-            _logger.LogTrace(handler.ToStringAndClear());
+            Log(LogLevel.Trace, null, handler.ToStateAndClear());
         }
 
         public void Debug([InterpolatedStringHandlerArgument("")] ref DebugLogInterpolatedStringHandler handler)
@@ -215,7 +215,7 @@ namespace Nk7.Logger
                 return;
             }
 
-            _logger.LogDebug(handler.ToStringAndClear());
+            Log(LogLevel.Debug, null, handler.ToStateAndClear());
         }
 
         public void Information([InterpolatedStringHandlerArgument("")] ref InformationLogInterpolatedStringHandler handler)
@@ -225,7 +225,7 @@ namespace Nk7.Logger
                 return;
             }
 
-            _logger.LogInformation(handler.ToStringAndClear());
+            Log(LogLevel.Information, null, handler.ToStateAndClear());
         }
 
         public void Warning([InterpolatedStringHandlerArgument("")] ref WarningLogInterpolatedStringHandler handler)
@@ -235,7 +235,7 @@ namespace Nk7.Logger
                 return;
             }
 
-            _logger.LogWarning(handler.ToStringAndClear());
+            Log(LogLevel.Warning, null, handler.ToStateAndClear());
         }
 
         public void Error([InterpolatedStringHandlerArgument("")] ref ErrorLogInterpolatedStringHandler handler)
@@ -245,7 +245,7 @@ namespace Nk7.Logger
                 return;
             }
 
-            _logger.LogError(handler.ToStringAndClear());
+            Log(LogLevel.Error, null, handler.ToStateAndClear());
         }
 
         public void Critical([InterpolatedStringHandlerArgument("")] ref CriticalLogInterpolatedStringHandler handler)
@@ -255,7 +255,7 @@ namespace Nk7.Logger
                 return;
             }
 
-            _logger.LogCritical(handler.ToStringAndClear());
+            Log(LogLevel.Critical, null, handler.ToStateAndClear());
         }
 
         public void Trace(Exception exception, [InterpolatedStringHandlerArgument("")] ref TraceLogInterpolatedStringHandler handler)
@@ -265,7 +265,7 @@ namespace Nk7.Logger
                 return;
             }
 
-            _logger.LogTrace(exception, handler.ToStringAndClear());
+            Log(LogLevel.Trace, exception, handler.ToStateAndClear());
         }
 
         public void Debug(Exception exception, [InterpolatedStringHandlerArgument("")] ref DebugLogInterpolatedStringHandler handler)
@@ -275,7 +275,7 @@ namespace Nk7.Logger
                 return;
             }
 
-            _logger.LogDebug(exception, handler.ToStringAndClear());
+            Log(LogLevel.Debug, exception, handler.ToStateAndClear());
         }
 
         public void Information(Exception exception, [InterpolatedStringHandlerArgument("")] ref InformationLogInterpolatedStringHandler handler)
@@ -285,7 +285,7 @@ namespace Nk7.Logger
                 return;
             }
 
-            _logger.LogInformation(exception, handler.ToStringAndClear());
+            Log(LogLevel.Information, exception, handler.ToStateAndClear());
         }
 
         public void Warning(Exception exception, [InterpolatedStringHandlerArgument("")] ref WarningLogInterpolatedStringHandler handler)
@@ -295,7 +295,7 @@ namespace Nk7.Logger
                 return;
             }
 
-            _logger.LogWarning(exception, handler.ToStringAndClear());
+            Log(LogLevel.Warning, exception, handler.ToStateAndClear());
         }
 
         public void Error(Exception exception, [InterpolatedStringHandlerArgument("")] ref ErrorLogInterpolatedStringHandler handler)
@@ -305,7 +305,7 @@ namespace Nk7.Logger
                 return;
             }
 
-            _logger.LogError(exception, handler.ToStringAndClear());
+            Log(LogLevel.Error, exception, handler.ToStateAndClear());
         }
 
         public void Critical(Exception exception, [InterpolatedStringHandlerArgument("")] ref CriticalLogInterpolatedStringHandler handler)
@@ -315,7 +315,19 @@ namespace Nk7.Logger
                 return;
             }
 
-            _logger.LogCritical(exception, handler.ToStringAndClear());
+            Log(LogLevel.Critical, exception, handler.ToStateAndClear());
+        }
+
+        private void Log(LogLevel level, Exception exception, TextLogState state)
+        {
+            try
+            {
+                _logger.Log(level, default, state, exception, TextLogState.Formatter);
+            }
+            finally
+            {
+                state.Release();
+            }
         }
     }
 }

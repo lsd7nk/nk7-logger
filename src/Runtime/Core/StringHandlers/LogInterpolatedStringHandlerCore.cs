@@ -107,6 +107,21 @@ namespace Nk7.Logger
             _builder.Append(s);
         }
 
+        public TextLogState ToStateAndClear()
+        {
+            if (!_enabled)
+            {
+                return TextLogState.Rent(default);
+            }
+
+            var state = TextLogState.Rent(_builder.AsSpan());
+
+            _builder.Dispose();
+            _builder = default;
+
+            return state;
+        }
+
         public string ToStringAndClear()
         {
             if (!_enabled)

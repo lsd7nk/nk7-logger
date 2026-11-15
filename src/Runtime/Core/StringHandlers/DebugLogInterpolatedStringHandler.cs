@@ -30,5 +30,6 @@ namespace Nk7.Logger
         public void AppendFormatted<T>(T value, int alignment) => _core.AppendFormatted(value, alignment);
         public void AppendFormatted<T>(T value, int alignment, string format) => _core.AppendFormatted(value, alignment, format);
         public string ToStringAndClear() => _core.ToStringAndClear();
+        internal TextLogState ToStateAndClear() => _core.ToStateAndClear();
     }
 }
