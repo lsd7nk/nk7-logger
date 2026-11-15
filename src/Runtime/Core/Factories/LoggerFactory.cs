@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using ZLogger.Formatters;
 using System.IO;
 using ZLogger;
 
@@ -6,11 +7,11 @@ namespace Nk7.Logger
 {
     public static class LoggerFactory
     {
-        private static readonly UnityDebugFormatter _formatter;
+        private static readonly UnityDebugLogProcessor _unityDebugProcessor;
 
         static LoggerFactory()
         {
-            _formatter = new UnityDebugFormatter();
+            _unityDebugProcessor = new UnityDebugLogProcessor(GetUnityDebugFormatter);
         }
 
         public static ILogger GetLogger(LogLevel minimumLogLevel = LogLevel.Error, string loggerFilePath = null)
@@ -27,7 +28,7 @@ namespace Nk7.Logger
                     ? minimunLogLevel
                     : LogLevel.Warning);
 
-                builder.AddZLoggerStream(new UnityDebugStream(), SetZLoggerStreamOptions);
+                builder.AddZLoggerLogProcessor(_unityDebugProcessor);
 
                 if (!string.IsNullOrEmpty(loggerFilePath))
                 {
@@ -48,11 +49,6 @@ namespace Nk7.Logger
             });
         }
 
-        private static void SetZLoggerStreamOptions(ZLoggerOptions options)
-        {
-            options.UseFormatter(GetUnityDebugFormatter);
-        }
-
         private static void SetZLoggerFileOptions(ZLoggerOptions options)
         {
             options.UsePlainTextFormatter();
@@ -60,7 +56,7 @@ namespace Nk7.Logger
 
         private static IZLoggerFormatter GetUnityDebugFormatter()
         {
-            return _formatter;
+            return new PlainTextZLoggerFormatter();
         }
     }
 }
