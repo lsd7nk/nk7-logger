@@ -99,6 +99,49 @@ namespace Nk7.Logger.Tests
             Assert.Pass(message);
         }
 
+        [Test]
+        [Description("For comparison: ZLogger's own ZLog* methods with ZLogger's file writer, and the same methods with the package's file writer")]
+        public void ZLoggerOwnMethodsForComparison()
+        {
+            var number = 42;
+            var packageWriter = _logger;
+
+            var packageWriterDisabled = CountAllocations(() => packageWriter.ZLogDebug($"value {number}"), BURST_CALLS, 0);
+            var packageWriterPaced = CountAllocations(() => packageWriter.ZLogInformation($"value {number}"), PACED_CALLS, PACE_MS);
+
+            var directory = new SessionLogDirectory();
+            var ownFileWriter = LoggerFactory.OwnFileWriter;
+            ILogger zLoggerWriter = null;
+
+            try
+            {
+                LoggerFactory.OwnFileWriter = false;
+                zLoggerWriter = LoggerFactory.GetSessionLogger(LogLevel.None, new SessionLogOptions(directory.Path, LogLevel.Information));
+                LoggerFactory.OwnFileWriter = ownFileWriter;
+
+                var logger = zLoggerWriter;
+                var service = new LoggerService(logger);
+
+                var disabled = CountAllocations(() => logger.ZLogDebug($"value {number}"), BURST_CALLS, 0);
+                var paced = CountAllocations(() => logger.ZLogInformation($"value {number}"), PACED_CALLS, PACE_MS);
+                var burst = CountAllocations(() => logger.ZLogInformation($"value {number}"), BURST_CALLS, 0);
+                var burstAgain = CountAllocations(() => logger.ZLogInformation($"value {number}"), BURST_CALLS, 0);
+                var facadePaced = CountAllocations(() => service.Information($"value {number}"), PACED_CALLS, PACE_MS);
+
+                Assert.Pass($"ZLog* with ZLogger's file writer. {BURST_CALLS} disabled ZLogDebug calls: {disabled} allocations. " +
+                    $"{PACED_CALLS} ZLogInformation calls {PACE_MS} ms apart: {paced}. {BURST_CALLS} in a row: {burst}, once more {burstAgain}. " +
+                    $"The facade with ZLogger's file writer, {PACED_CALLS} calls {PACE_MS} ms apart: {facadePaced}. " +
+                    $"ZLog* with the package's file writer. {BURST_CALLS} disabled ZLogDebug calls: {packageWriterDisabled}. " +
+                    $"{PACED_CALLS} ZLogInformation calls {PACE_MS} ms apart: {packageWriterPaced}");
+            }
+            finally
+            {
+                LoggerFactory.OwnFileWriter = ownFileWriter;
+                LoggerFactory.Close(zLoggerWriter);
+                directory.Dispose();
+            }
+        }
+
         private static int CountAllocations(Action call, int calls, int paceMs)
         {
             for (var i = 0; i < WARM_UP_CALLS; i++)

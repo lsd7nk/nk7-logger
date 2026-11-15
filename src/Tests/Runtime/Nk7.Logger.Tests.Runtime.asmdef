@@ -1,0 +1,44 @@
+{
+    "name": "Nk7.Logger.Tests.Runtime",
+    "rootNamespace": "Nk7.Logger.Tests",
+    "references": [
+        "Nk7.Logger",
+        "UnityEngine.TestRunner"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll",
+        "Microsoft.Extensions.Logging.Abstractions.dll",
+        "Microsoft.Extensions.Logging.dll",
+        "Microsoft.Extensions.DependencyInjection.Abstractions.dll",
+        "Microsoft.Extensions.DependencyInjection.dll",
+        "Microsoft.Extensions.Options.dll",
+        "Microsoft.Extensions.Primitives.dll",
+        "Microsoft.Bcl.AsyncInterfaces.dll",
+        "Microsoft.Bcl.TimeProvider.dll",
+        "System.Threading.Channels.dll",
+        "System.Threading.Tasks.Extensions.dll",
+        "System.Text.Json.dll",
+        "System.Memory.dll",
+        "System.Buffers.dll",
+        "System.Runtime.CompilerServices.Unsafe.dll",
+        "ZLogger.dll",
+        "Utf8StringInterpolation.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS",
+        "NK7_TEST_FRAMEWORK"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.unity.test-framework",
+            "expression": "1.1.0",
+            "define": "NK7_TEST_FRAMEWORK"
+        }
+    ],
+    "noEngineReferences": false
+}

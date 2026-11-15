@@ -137,17 +137,36 @@ What a call like `_logger.Information($"value {number}")` costs on the thread th
 
 Number of GC allocations on the logging thread, one `int` in the message, console off, file on (`LoggerAllocationTests`, Unity 6000.0.66f2, Editor, EditMode):
 
-| Calls | `ILoggerService` | `ILogger.LogX($"...")` |
-| --- | --- | --- |
-| 1000 `Debug` calls, level disabled | 0 | 2000 |
-| 200 `Information` calls 2 ms apart, level enabled | 0 | 1200 |
-| 1000 `Information` calls in a row, level enabled | 1141 the first time, 1 when repeated | 6191 |
+| Calls | `ILoggerService` | ZLogger `ZLog*($"...")` with ZLogger's file writer | `ILogger.LogX($"...")` |
+| --- | --- | --- | --- |
+| 1000 `Debug` calls, level disabled | 0 | 0 | 2000 |
+| 200 `Information` calls 2 ms apart, level enabled | 0 | 800 to 802 | 1200 |
+| 1000 `Information` calls in a row, level enabled | 842 to 1141 the first time, 1 to 108 when repeated | 3003, and 3001 when repeated | 6124 to 6196 |
 
-- The numbers count allocations, not bytes, and cover only the thread that logs. They were taken in the Editor; a player build was not measured.
+Where a cell has a range, the numbers come from several runs.
+
+- The numbers count allocations, not bytes, and cover only the thread that logs. This table is from the Editor; the numbers from a phone are below.
 - Calls in a row are logged faster than the file is written, so entries wait in the queue and each holds a pooled object. The first such run creates those objects (up to 1024 are kept), a repeated run reuses them.
 - With an output that only takes the entry and gives it back, an enabled entry allocates nothing in both modes (`EnabledEntryAllocatesNothingBeforeTheOutput`).
 
-The package writes files with its own background thread because ZLogger's file writer costs one allocation per entry at a steady rate: it takes entries through a `Channel`, and a write that finds its reader waiting allocates to wake it. Measured before the change: 200 allocations for 200 calls 2 ms apart, and 202 for 200 writes to a bare `Channel` with the same options.
+The same calls in a development IL2CPP build on an Android phone (Samsung SM-A145F, Android 15, arm64, `LoggerPlayerAllocationTests`):
+
+| Calls | `ILoggerService` | ZLogger `ZLog*($"...")` with ZLogger's file writer | `ILogger.LogX($"...")` |
+| --- | --- | --- | --- |
+| 1000 `Debug` calls, level disabled | 0 | 0 | 2000 |
+| 200 `Information` calls 2 ms apart, level enabled | 0 | 800 | 1200 |
+| 1000 `Information` calls in a row, level enabled | 871 the first time, 0 when repeated | 3036, and 3020 when repeated | not measured |
+
+The counter these tests use works only in the Editor and in development builds, so a release build was not measured.
+
+The package writes files with its own background thread because ZLogger's file writer costs one allocation per entry at a steady rate: it takes entries through a `Channel`, and a write that finds its reader waiting allocates to wake it. Both writers measured with the same calls, 200 of them 2 ms apart (`ZLoggerOwnMethodsForComparison`):
+
+| Calls | The package's file writer | ZLogger's file writer |
+| --- | --- | --- |
+| `ILoggerService.Information($"...")` | 0 | 202 |
+| ZLogger `ZLogInformation($"...")` | 600 | 800 |
+
+The other three allocations of `ZLog*` happen before the writer and do not depend on the arguments: with an output that discards the entry, 1000 calls gave 3000 with no argument, with one `int`, with two and with a `string`. `ZLog*` hands its log state to `ZLoggerLogger.Log<TState>` as a struct, and that method type-tests and casts the state before it creates the entry. In the Unity Editor each type test or interface cast of a struct through a generic parameter allocated once (1000 for 1000 calls, measured apart from ZLogger). The package passes a class, so the same checks cost it nothing. On the phone `ZLog*` cost the same three allocations per call before the writer (600 for 200 calls with the package's file writer); the separate measurement of type tests was not obtained there.
 
 On WebGL the package does not start a thread and leaves file output to ZLogger's writer, so that allocation stays there. A WebGL build was not tested; the tests run that path in the Editor.
 
@@ -341,6 +360,8 @@ EditMode tests live in `Tests/Editor` (`Nk7.Logger.Tests.Editor`, category `Logg
 ```
 
 The tests compile only when `com.unity.test-framework` 1.1.0+ is installed.
+
+`Tests/Runtime` (`Nk7.Logger.Tests.Runtime`) holds one PlayMode test, `LoggerPlayerAllocationTests`. It measures the allocation counts on the platform it runs on, the Editor or a development player on a device, and writes them to the test message and to the log, every line starting with `[nk7-logger-allocations]`.
 
 ## Requirements
 
