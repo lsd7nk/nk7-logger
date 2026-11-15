@@ -1,0 +1,33 @@
+{
+    "name": "Nk7.Logger.Tests.Editor",
+    "rootNamespace": "Nk7.Logger.Tests",
+    "references": [
+        "Nk7.Logger",
+        "Nk7.Logger.Testing",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll",
+        "Microsoft.Extensions.Logging.Abstractions.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS",
+        "NK7_TEST_FRAMEWORK"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.unity.test-framework",
+            "expression": "1.1.0",
+            "define": "NK7_TEST_FRAMEWORK"
+        }
+    ],
+    "noEngineReferences": false
+}
