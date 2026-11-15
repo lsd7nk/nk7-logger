@@ -73,5 +73,21 @@ namespace Nk7.Logger.Tests
             StringAssert.Contains("kept entry", SessionLogDirectory.WaitFor(file, "kept entry"),
                 "The logger kept before Initialize still writes only to the console");
         }
+
+        [Test]
+        [Description("Reset, which runs on every play mode start, drops the app logger of the previous run: entries go to the Unity console again")]
+        public void ResetReturnsEntriesToTheUnityConsole()
+        {
+            var logger = LoggerFactory.GetSessionLogger(LogLevel.None, new SessionLogOptions(_directory.Path, LogLevel.Information));
+
+            LoggerLocator.Initialize(new LoggerService(logger));
+            LoggerLocator.Reset();
+
+            Assert.IsNull(LoggerLocator.Target, "Reset kept the app logger of the previous run");
+
+            LogAssert.Expect(LogType.Warning, new Regex("after reset"));
+
+            LoggerLocator.Instance.Warning("after reset");
+        }
     }
 }

@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
-using System.Buffers;
 using System.Text;
 using UnityEngine;
 using ZLogger;
@@ -11,29 +10,36 @@ namespace Nk7.Logger
     internal sealed class UnityDebugLogProcessor : IAsyncLogProcessor
     {
         private readonly Func<IZLoggerFormatter> _formatterFactory;
+        private readonly bool _plainMessages;
 
         [ThreadStatic] private static Utf8Buffer _buffer;
         [ThreadStatic] private static IZLoggerFormatter _formatter;
 
-        public UnityDebugLogProcessor(Func<IZLoggerFormatter> formatterFactory)
+        public UnityDebugLogProcessor(Func<IZLoggerFormatter> formatterFactory, bool plainMessages = false)
         {
             _formatterFactory = formatterFactory ?? throw new ArgumentNullException(nameof(formatterFactory));
+            _plainMessages = plainMessages;
         }
 
         public void Post(IZLoggerEntry log)
         {
             try
             {
-                var level = log.LogInfo.LogLevel;
-
-                if (TryFormat(log, out var message))
-                {
-                    Write(level, message);
-                }
+                Write(log);
             }
             finally
             {
                 log.Return();
+            }
+        }
+
+        public void Write(IZLoggerEntry log)
+        {
+            var level = log.LogInfo.LogLevel;
+
+            if (TryFormat(log, out var message))
+            {
+                Write(level, message);
             }
         }
 
@@ -44,6 +50,12 @@ namespace Nk7.Logger
 
         private bool TryFormat(IZLoggerEntry log, out string message)
         {
+            if (_plainMessages && log.LogInfo.Exception == null)
+            {
+                message = TrimLineBreaks(log.ToString());
+                return message.Length > 0;
+            }
+
             var buffer = _buffer ??= new Utf8Buffer();
             var formatter = _formatter ??= _formatterFactory();
 
@@ -75,6 +87,25 @@ namespace Nk7.Logger
             return true;
         }
 
+        private static string TrimLineBreaks(string message)
+        {
+            if (message == null)
+            {
+                return string.Empty;
+            }
+
+            var length = message.Length;
+
+            while (length > 0 && (message[length - 1] == '\n' || message[length - 1] == '\r'))
+            {
+                --length;
+            }
+
+            return length == message.Length
+                ? message
+                : message.Substring(0, length);
+        }
+
         private static void Write(LogLevel level, string message)
         {
             switch (level)
@@ -91,63 +122,6 @@ namespace Nk7.Logger
                 default:
                     Debug.Log(message);
                     break;
-            }
-        }
-
-       
-        private sealed class Utf8Buffer : IBufferWriter<byte>
-        {
-            private const int INITIAL_CAPACITY = 1024;
-
-            private byte[] _array = new byte[INITIAL_CAPACITY];
-            private int _count;
-
-            public byte[] Array => _array;
-            public int Count => _count;
-
-            public void Clear()
-            {
-                _count = 0;
-            }
-
-            public void Advance(int count)
-            {
-                _count += count;
-            }
-
-            public Memory<byte> GetMemory(int sizeHint = 0)
-            {
-                EnsureCapacity(sizeHint);
-                return new Memory<byte>(_array, _count, _array.Length - _count);
-            }
-
-            public Span<byte> GetSpan(int sizeHint = 0)
-            {
-                EnsureCapacity(sizeHint);
-                return new Span<byte>(_array, _count, _array.Length - _count);
-            }
-
-            private void EnsureCapacity(int sizeHint)
-            {
-                if (sizeHint < 1)
-                {
-                    sizeHint = 1;
-                }
-
-                if (_array.Length - _count >= sizeHint)
-                {
-                    return;
-                }
-
-                var required = _count + sizeHint;
-                var capacity = _array.Length;
-
-                while (capacity < required)
-                {
-                    capacity *= 2;
-                }
-
-                System.Array.Resize(ref _array, capacity);
             }
         }
     }

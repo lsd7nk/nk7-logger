@@ -1,7 +1,7 @@
 {
   "name": "com.nk7.logger",
   "version": "2.1.0",
-  "unity": "2021.3",
+  "unity": "2022.2",
   "license": "MIT",
   "dependencies": {
     "org.nuget.zlogger": "2.5.10",

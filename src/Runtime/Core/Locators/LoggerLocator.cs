@@ -22,6 +22,13 @@ namespace Nk7.Logger
             _target = ReferenceEquals(logger, _instance) ? _target : logger;
         }
 
+        [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
+        internal static void Reset()
+        {
+            _target = null;
+            _console = null;
+        }
+
         private static ILoggerService CreateConsoleLogger()
         {
             return new LoggerService(LoggerFactory.GetLogger(LogLevel.Trace));
